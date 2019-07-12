@@ -1,0 +1,116 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'bundler/setup'
+require 'net/http'
+require 'optparse'
+require 'nokogiri'
+require 'yaml'
+
+CONF_PATH = "#{ENV['HOME']}/.silence"
+PARSE_LINK  = 'https://fediverse.network/mastodon?build=gab'
+
+config = YAML.load_file(CONF_PATH)
+options = {}
+OptionParser.new do |opts|
+  opts.banner = 'Usage: ./silence [options]'
+
+  opts.on('-a', '--admin',
+          'Run in admin mode -- for use by Mastodon Server owners') do
+    options[:admin] = true
+  end
+
+  opts.on('-t', '--token TOKEN',
+          'Mastodon access TOKEN') do |t|
+    options[:token] = t
+  end
+
+  opts.on('-i', '--instance INSTANCE',
+         'Specify the users Mastodon INSTANCE') do |i|
+    options[:instance] = i
+  end
+
+  opts.on('-v', '--verbose',
+          'Prints out domains as they get blocked') do
+    options[:verbose] = true
+  end
+
+  opts.on('-p', '--path PATH',
+          'PATH to Mastodon root folder') do |p|
+    options[:path] = p
+  end
+
+  opts.on('-h', '--help', 'prints this help') do
+    puts opts
+    exit
+  end
+  
+end.parse!
+
+config.merge! options
+
+# download a fresh copy and check against a cached version
+document = Nokogiri::HTML(Net::HTTP.get(URI.parse(PARSE_LINK)))
+links = document.css('table.table-condensed td a').collect {|link| link.content}
+
+
+# if a new link has been added to the site we need to block it
+if links.join != (config[:cache] || '')
+  if options[:admin]
+    ## ADMIN MODE
+    
+    # load up our rails application environment
+    require_relative "#{config[:path] || options[:path] || '..'}/config/application"
+    require_relative "#{config[:path] || options[:path] || '..'}/config/boot"
+    
+    # create a domain block for each link
+    links.each do |url|
+      unless DomainBlock.blocked? url
+        DomainBlock.new(domain: url,
+                        severity: 'suspend',
+                        reject_media: true,
+                        reject_reports: true).save!
+        
+        puts "blocking #{url}" if options[:verbose]
+      end
+    end
+
+    
+    # write out our new cache
+    File.write(CONF_PATH, links.join)
+    
+    
+  else
+    
+    ## USER MODE
+    require 'moostodon'
+    
+    info = { instance: "https://#{options[:instance].nil? ? '' : 
+                                  options[:instance].gsub(/https?:\/\//,'')}",
+             token: options[:token] }
+
+    info[:instance], info[:token] = File.read(TOKEN_PATH).split(',') if File.exists?(TOKEN_PATH) 
+    
+    # create our mastodon client
+    raise 'no user information found. see help' if (info[:instance].nil? or info[:instance].empty?) or
+                                                   (info[:token].nil? or info[:token].empty?)
+    
+    client = Mastodon::REST::Client.new(base_url: info[:instance],
+                                        bearer_token: info[:token])
+    blocks = Array(client.domain_blocks)
+    
+    # user-level block each domain
+    links.select {|link| !blocks.include?(link)}.each do |url|
+      puts "blocking #{url}" if options[:verbose]
+      client.block_domain(url)
+    end
+    
+    # save our info for next time
+    File.write(CONF_PATH, "#{info[:instance]},#{info[:token]}")
+  end
+
+  File.write(CACHED_PATH, links.join)
+  puts "done!" if options[:verbose]
+  
+else
+  puts "no new garbage to block~" if options[:verbose]
+end
