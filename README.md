@@ -4,9 +4,15 @@
 
 ## installation
 
-clone the repo onto your computer and run
+if you plan on using this script in admin mode (see below for explanation) you won't need to install anything as it uses
+the gems that your mastodon installation uses. you *will* need bundler 2+, but you should already have that because you have
+mastodon installed.
 
-`bundle install`
+if you plan on using the script in user mode (see below for explanation) you'll need to clone (or download) this repo and run
+
+`bundle install` 
+
+in the folder, assuming you have ruby and bundler installed.
 
 ## usage
 
@@ -18,11 +24,13 @@ the script supports two modes: admin and user mode
 
 admin mode is meant for server administrators as it creates server level blocks.
 
-to run in admin mode, you'll need to pass the option `-a`
+to run in admin mode, you'll need to pass the option `-a` and have the `RAILS_ENV` environment var set to 'production'
 
 the script assumes the mastodon root folder is the parent folder (as in, this git repo is placed inside the mastodon root folder), however you can specify the relative path to the root folder by using the `-p` option
 
 example usage: `./silence -a -p '../mastodon'`
+
+example usage setting envvar: `RAILS_ENV=production ./silence -a -p '../mastodon'`
 
 ### user mode
 
@@ -54,5 +62,8 @@ example post first run usage: `./silence`
 ## unsolicited advice from me~
 
 im just gonna add this script into my crontab, and i personally suggest you do too.
+
+if you're using admin mode, it might be easier to add `RAILS_ENV=production` into your shell's initialization file,
+that way you don't have to worry about adding it in for every invocation.
 
 oh! and before you run this in user-mode make sure you're admin isn't already using it. it won't hurt anything, just a bit redundent :p
