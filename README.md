@@ -28,6 +28,10 @@ to run in admin mode, you'll need to pass the option `-a` and have the `RAILS_EN
 
 the script assumes the mastodon root folder is the parent folder (as in, this git repo is placed inside the mastodon root folder), however you can specify the relative path to the root folder by using the `-p` option
 
+*note:* `silence` will check if a domain is blocked already and will not attempt to block it if it already is.
+in mastodon v2.9.1+ subdomains are automatically blocked when the base domain is blocked.
+so if you notice that the script isnt blocking 'bad.gab.garbage' and you already have a block for 'gab.garbage' thats why!
+
 example usage: `./silence -a -p '../mastodon'`
 
 example usage setting envvar: `RAILS_ENV=production ./silence -a -p '../mastodon'`
