@@ -96,10 +96,10 @@ else
   
   if links.join != (config[:cache] || '')
     info = { instance: "https://#{options[:instance].nil? ? '' : 
-                                  options[:instance].gsub(/https?:\/\//,'')}",
+                                  options[:instance].gsub(/https?:\/\//,'')}".strip,
              token: options[:token] }
     
-    info[:instance], info[:token] = config[:instance], config[:token] if File.exists?(CONF_PATH) 
+    info[:instance], info[:token] = config[:instance].strip, config[:token].strip if File.exists?(CONF_PATH) 
     
     # create our mastodon client
     raise 'no user information found. see help' if ((info[:instance].nil? or info[:instance].empty?) or
