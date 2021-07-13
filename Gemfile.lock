@@ -1,8 +1,8 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.6.0)
-      public_suffix (>= 2.0.2, < 4.0)
+    addressable (2.8.0)
+      public_suffix (>= 2.0.2, < 5.0)
     buftok (0.2.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
@@ -24,7 +24,7 @@ GEM
     nokogiri (1.10.4)
       mini_portile2 (~> 2.4.0)
     oj (3.7.12)
-    public_suffix (3.1.1)
+    public_suffix (4.0.6)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.6)
@@ -34,7 +34,7 @@ PLATFORMS
 
 DEPENDENCIES
   moostodon
-  nokogiri
+  nokogiri (~> 1.10.4)
 
 BUNDLED WITH
    2.0.1
